@@ -1,0 +1,23 @@
+# Data (never commit raw/processed data)
+data/
+*.parquet
+*.delta
+
+# Cache
+.cache/
+fastf1_cache/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Env / secrets
+.env
+*.local

@@ -1,0 +1,20 @@
+# Pipeline configuration
+api:
+  base_url: "https://api.jolpi.ca/ergast/f1"
+  # Jolpica rate limits (~200 req/hr). Stay under it; the client enforces this.
+  requests_per_hour: 180
+  max_retries: 5
+  backoff_seconds: 2
+
+ingestion:
+  seasons: ["current"]   # e.g. ["2021", "2022", "2023", "2024", "current"]
+  cache_dir: ".cache"
+
+paths:
+  bronze: "data/bronze"
+  silver: "data/silver"
+  gold: "data/gold"
+
+model:
+  target: "winner"        # binary: did this driver win the race?
+  test_season: "current"

@@ -1,0 +1,18 @@
+name: Deploy bundle
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: databricks/setup-cli@main
+      - name: Deploy to prod
+        run: databricks bundle deploy -t prod
+        env:
+          # Add these under GitHub repo Settings -> Secrets and variables -> Actions
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
