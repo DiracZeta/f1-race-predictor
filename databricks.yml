@@ -1,16 +1,14 @@
 # ---------------------------------------------------------------------------
-# databricks.yml — Declarative Automation Bundle
-# (formerly "Databricks Asset Bundles"; the CLI command is still `databricks bundle`)
+# databricks.yml — Declarative Automation Bundle (serverless workspace version)
 #
-# This one file defines the whole deployable project: a Job that runs
-# bronze -> silver -> gold on a weekly schedule, plus separate dev and prod
-# targets. Deploy it with:  databricks bundle deploy -t dev
+# This workspace only supports serverless compute, so there is no cluster
+# definition here — Databricks manages compute automatically. Deploy with:
+#   databricks bundle deploy -t dev
 # ---------------------------------------------------------------------------
 
 bundle:
   name: f1-race-predictor
 
-# Values you can tweak without touching the resource definitions below.
 variables:
   catalog:
     description: Unity Catalog to read/write in.
@@ -18,14 +16,6 @@ variables:
   schema:
     description: Schema (database) that holds the F1 data + volume.
     default: f1
-  node_type_id:
-    description: >-
-      Worker VM type. Default is for Azure. Use "m5.large" on AWS or
-      "n2-standard-4" on GCP.
-    default: Standard_DS3_v2
-  spark_version:
-    description: Databricks Runtime version.
-    default: "15.4.x-scala2.12"
   seasons_to_backfill:
     description: Comma-separated seasons the bronze stage backfills.
     default: "2022,2023,2024,2025"
@@ -42,17 +32,18 @@ resources:
         timezone_id: America/New_York
         pause_status: PAUSED
 
-      # One small cluster shared by all three tasks (cheaper than one each).
-      job_clusters:
-        - job_cluster_key: f1_cluster
-          new_cluster:
-            spark_version: ${var.spark_version}
-            node_type_id: ${var.node_type_id}
-            num_workers: 1
+      # Serverless dependencies are declared here and referenced by each task.
+      environments:
+        - environment_key: f1_env
+          spec:
+            client: "3"
+            dependencies:
+              - "requests>=2.31"
+              - "pyyaml>=6.0"
 
       tasks:
         - task_key: bronze_ingest
-          job_cluster_key: f1_cluster
+          environment_key: f1_env
           spark_python_task:
             python_file: pipelines/run_bronze.py
             parameters:
@@ -60,16 +51,11 @@ resources:
               - "/Volumes/${var.catalog}/${var.schema}/f1_data/bronze"
               - "--seasons"
               - "${var.seasons_to_backfill}"
-          libraries:
-            - pypi:
-                package: "requests>=2.31"
-            - pypi:
-                package: "pyyaml>=6.0"
 
         - task_key: silver_transform
           depends_on:
             - task_key: bronze_ingest
-          job_cluster_key: f1_cluster
+          environment_key: f1_env
           spark_python_task:
             python_file: pipelines/run_silver.py
             parameters:
@@ -81,7 +67,7 @@ resources:
         - task_key: gold_features
           depends_on:
             - task_key: silver_transform
-          job_cluster_key: f1_cluster
+          environment_key: f1_env
           spark_python_task:
             python_file: pipelines/run_gold.py
             parameters:
@@ -90,16 +76,11 @@ resources:
               - "--gold-path"
               - "/Volumes/${var.catalog}/${var.schema}/f1_data/gold"
 
-# A target is an environment you deploy to.
 targets:
-  # Development: your personal sandbox. `mode: development` prefixes the job
-  # name with your username and keeps the schedule paused so nothing runs
-  # automatically — you trigger it by hand while building.
   dev:
     mode: development
     default: true
 
-  # Production: the real, scheduled deployment. The schedule is turned on here.
   prod:
     mode: production
     resources:
