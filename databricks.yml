@@ -14,7 +14,7 @@ bundle:
 variables:
   catalog:
     description: Unity Catalog to read/write in.
-    default: main
+    default: workspace
   schema:
     description: Schema (database) that holds the F1 data + volume.
     default: f1
