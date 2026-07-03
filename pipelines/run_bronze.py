@@ -11,11 +11,32 @@ import logging
 import os
 import sys
 
-# Make `import src...` work no matter what the current working directory is
-# (Databricks sets CWD to the script's folder, which isn't the repo root).
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _ROOT not in sys.path:
-    sys.path.insert(0, _ROOT)
+# Make `import src...` work regardless of where this runs from. On serverless
+# Databricks `__file__` may be undefined, so fall back to searching upward from
+# the current working directory for the repo root (the folder containing `src`).
+def _add_repo_root_to_path():
+    candidates = []
+    try:
+        candidates.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    except NameError:
+        pass  # __file__ not defined (e.g. serverless / notebook execution)
+    here = os.path.abspath(os.getcwd())
+    while True:
+        candidates.append(here)
+        parent = os.path.dirname(here)
+        if parent == here:
+            break
+        here = parent
+    for path in candidates:
+        if os.path.isdir(os.path.join(path, "src")):
+            if path not in sys.path:
+                sys.path.insert(0, path)
+            return
+    # Fallback: at least add the first candidate so imports have a chance.
+    if candidates and candidates[0] not in sys.path:
+        sys.path.insert(0, candidates[0])
+
+_add_repo_root_to_path()
 
 from src.transform.bronze import BronzeWriter  # noqa: E402
 

@@ -8,9 +8,29 @@ import logging
 import os
 import sys
 
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _ROOT not in sys.path:
-    sys.path.insert(0, _ROOT)
+# Serverless-safe repo-root discovery (`__file__` may be undefined on serverless).
+def _add_repo_root_to_path():
+    candidates = []
+    try:
+        candidates.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    except NameError:
+        pass
+    here = os.path.abspath(os.getcwd())
+    while True:
+        candidates.append(here)
+        parent = os.path.dirname(here)
+        if parent == here:
+            break
+        here = parent
+    for path in candidates:
+        if os.path.isdir(os.path.join(path, "src")):
+            if path not in sys.path:
+                sys.path.insert(0, path)
+            return
+    if candidates and candidates[0] not in sys.path:
+        sys.path.insert(0, candidates[0])
+
+_add_repo_root_to_path()
 
 from src.transform.bronze import BronzeWriter          # noqa: E402
 from src.transform import silver, gold                 # noqa: E402
