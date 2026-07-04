@@ -42,13 +42,7 @@ def main() -> None:
     parser.add_argument("--gold-path", default="data/gold")
     args, _ = parser.parse_known_args()
 
-    try:
-        gold.build_gold()  # TODO: pass args.silver_path / args.gold_path once implemented
-    except NotImplementedError:
-        logging.getLogger("run_gold").warning(
-            "gold stage not implemented yet — skipping. Build src/transform/gold.py, then remove this guard."
-        )
-        return
+    gold.build_gold(silver_path=args.silver_path, gold_path=args.gold_path)
 
 
 if __name__ == "__main__":

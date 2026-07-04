@@ -43,13 +43,7 @@ def main() -> None:
     parser.add_argument("--silver-path", default="data/silver")
     args, _ = parser.parse_known_args()
 
-    try:
-        silver.build_silver()  # TODO: pass args.bronze_path / args.silver_path once implemented
-    except NotImplementedError:
-        logging.getLogger("run_silver").warning(
-            "silver stage not implemented yet — skipping. Build src/transform/silver.py, then remove this guard."
-        )
-        return
+    silver.build_silver(bronze_path=args.bronze_path, silver_path=args.silver_path)
 
 
 if __name__ == "__main__":
