@@ -48,7 +48,7 @@ def main() -> None:
         logging.getLogger("run_gold").warning(
             "gold stage not implemented yet — skipping. Build src/transform/gold.py, then remove this guard."
         )
-        sys.exit(0)
+        return
 
 
 if __name__ == "__main__":
