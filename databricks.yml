@@ -1,7 +1,8 @@
 # ---------------------------------------------------------------------------
 # databricks.yml — Declarative Automation Bundle (serverless workspace version)
 #
-# Pipeline: bronze -> silver -> gold -> train_model, on a weekly schedule.
+# Pipeline: bronze -> silver -> gold -> train_model, on a weekly schedule,
+# with email notifications on success/failure.
 # Deploy with:  databricks bundle deploy -t dev
 # ---------------------------------------------------------------------------
 
@@ -18,6 +19,9 @@ variables:
   seasons_to_backfill:
     description: Comma-separated seasons the bronze stage backfills.
     default: "2022,2023,2024,2025"
+  notification_email:
+    description: Address that receives job success/failure emails.
+    default: 98jfry@gmail.com
 
 resources:
   jobs:
@@ -31,9 +35,15 @@ resources:
         timezone_id: America/New_York
         pause_status: PAUSED
 
-      # Serverless dependencies. pandas/pyarrow/numpy are pre-installed on the
-      # runtime; we only need to add what isn't: the API + config libs, plus the
-      # ML libs for the training task.
+      # Email whenever a run finishes or fails. No secrets needed — this uses
+      # Databricks' built-in job notifications. (Content is run status, not the
+      # prediction itself.)
+      email_notifications:
+        on_success:
+          - ${var.notification_email}
+        on_failure:
+          - ${var.notification_email}
+
       environments:
         - environment_key: f1_env
           spec:
