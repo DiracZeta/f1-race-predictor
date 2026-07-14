@@ -108,8 +108,10 @@ targets:
     mode: development
     default: true
 
-  prod:
+prod:
     mode: production
+    workspace:
+      root_path: /Workspace/Users/98jfry@gmail.com/.bundle/${bundle.name}/${bundle.target}
     resources:
       jobs:
         f1_pipeline:
