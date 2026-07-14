@@ -20,6 +20,9 @@ variables:
   seasons_to_backfill:
     description: Comma-separated seasons the bronze stage backfills.
     default: "2022,2023,2024,2025"
+  notification_email:
+    description: Address that receives job success/failure emails.
+    default: your_email
 
 resources:
   jobs:

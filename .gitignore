@@ -21,3 +21,4 @@ venv/
 # Env / secrets
 .env
 *.local
+Setup_Databricks.md
