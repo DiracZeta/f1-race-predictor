@@ -19,30 +19,24 @@ variables:
   seasons_to_backfill:
     description: Comma-separated seasons the bronze stage backfills.
     default: "2022,2023,2024,2025"
-  notification_email:
-    description: Address that receives job success/failure emails.
-    default: your_email
 
 resources:
   jobs:
     f1_pipeline:
       name: "F1 Race Predictor"
 
-      # F1 races run on Sundays, so refresh every Monday at 06:00 US Eastern.
-      # Paused here on purpose; the prod target below switches it on.
       schedule:
         quartz_cron_expression: "0 0 6 ? * MON"
         timezone_id: America/New_York
         pause_status: PAUSED
 
-      # Email whenever a run finishes or fails. No secrets needed — this uses
-      # Databricks' built-in job notifications. (Content is run status, not the
-      # prediction itself.)
+      # Status emails go to whoever deploys the bundle (resolved at deploy time),
+      # so no personal address is stored in this file.
       email_notifications:
         on_success:
-          - ${var.notification_email}
+          - ${workspace.current_user.userName}
         on_failure:
-          - ${var.notification_email}
+          - ${workspace.current_user.userName}
 
       environments:
         - environment_key: f1_env
@@ -108,10 +102,10 @@ targets:
     mode: development
     default: true
 
-prod:
+  prod:
     mode: production
     workspace:
-      root_path: /Workspace/Users/98jfry@gmail.com/.bundle/${bundle.name}/${bundle.target}
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
     resources:
       jobs:
         f1_pipeline:
